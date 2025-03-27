@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         PYTHON_HOME = '/usr/bin/python3'
+        VENV_PATH = 'venv'
     }
 
     stages {
@@ -11,18 +12,22 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/ThakurSahilSingh/app_python.git'
             }
         }
-        stage('Install Dependencies') {
+        stage('Setup Virtual Environment') {
             steps {
                 sh '''
-                sudo apt update
-                sudo apt install python3 python3-pip -y
-                sudo pip3 install -r requirements.txt
+                ${PYTHON_HOME} -m venv ${VENV_PATH}
+                source ${VENV_PATH}/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
                 '''
             }
         }
         stage('Run Tests') {
             steps {
-                sh 'pytest tests/ --junitxml=test-results.xml'
+                sh '''
+                source ${VENV_PATH}/bin/activate
+                pytest tests/ --junitxml=test-results.xml
+                '''
             }
         }
         stage('Build Application') {
